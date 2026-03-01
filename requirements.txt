@@ -1,0 +1,15 @@
+langchain==0.3.14
+langchain-community==0.3.14
+langchain-huggingface==0.1.2
+langchain-groq==0.2.4
+faiss-cpu==1.10.0
+streamlit==1.41.1
+pandas==2.2.3
+pytesseract==0.3.13
+Pillow==11.1.0
+python-dotenv==1.0.1
+pymupdf==1.25.1
+sentence-transformers==3.3.1
+groq==0.13.0
+beautifulsoup4==4.12.3
+requests==2.32.3
