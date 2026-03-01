@@ -1,13 +1,17 @@
-#  Multi-Modal RAG System
+# 🧠 Multi-Modal RAG System
 
 A production-ready **Retrieval Augmented Generation (RAG)** system that ingests and queries information from multiple data types — PDF, CSV, Images (OCR), and Webpages — using a unified vector store and LLM-powered responses.
 
+Built for the VAICS Consulting evaluation task.
+
+---
 
 ## 🏗️ Architecture
 
+```
 ┌─────────────────────────────────────────────────────────────┐
-│                        USER INTERFACE                        │
-│                  FastAPI + Dark Chat UI                      │
+│                        USER INTERFACE                       │
+│                            FastAPI                          │
 └──────────────────────────┬──────────────────────────────────┘
                            │
             ┌──────────────▼──────────────┐
@@ -36,7 +40,9 @@ A production-ready **Retrieval Augmented Generation (RAG)** system that ingests 
             │  Metadata filtering         │
             │  Groq LLaMA streaming       │
             └─────────────────────────────┘
+```
 
+---
 
 ## ✨ Features
 
@@ -75,10 +81,12 @@ A production-ready **Retrieval Augmented Generation (RAG)** system that ingests 
 | Web Scraper | BeautifulSoup4 |
 | Framework | LangChain |
 
+---
 
 ## 📁 Project Structure
 
-Vaics/
+```
+multimodal-rag-system/
 ├── main.py                  # FastAPI server — upload, index, stream
 ├── requirements.txt         # All dependencies
 ├── .env                     # API keys (not committed)
@@ -91,7 +99,9 @@ Vaics/
     ├── ingest.py            # File loaders for all 4 data types
     ├── router.py            # LLM-based semantic query router
     └── query.py             # FAISS retrieval + Groq LLM generation
+```
 
+---
 
 ## ⚙️ How to Run
 
@@ -140,18 +150,17 @@ http://localhost:8000
 
 ## 📊 Example Queries
 
-| Data Type | Example Query |
-|-----------|--------------|
-| PDF | *"What are the projects in the resume?"* |
-| CSV | *"What is the survival rate by passenger class?"* |
-| CSV | *"Who survived among female passengers?"* |
-| Image | *"What components are shown in the diagram?"* |
-| Webpage | *"What are the types of quantization techniques?"* |
+| Data Type | Example Query                                               |
+|-----------|-------------------------------------------------------------|
+| PDF | *"What are the projects in the resume?"*                          |
+| CSV | *"What is the survival rate by passenger class?"*                 |
+| CSV | *"Who survived among female passengers?"*                         |
+| Image | *"What components are shown in the diagram?"*                   |
+| Webpage | *"What are the types of quantization techniques?"*            |
 | Cross-modal | *"Compare skills in resume with concepts on the webpage"* |
 
----
 
-## 🔧 Design Decisions
+## Design Decisions
 
 ### Why FAISS over ChromaDB?
 - Zero external dependencies, runs fully local
@@ -173,7 +182,6 @@ http://localhost:8000
 - Ultra-fast inference (low latency streaming)
 - LLaMA 3 quality matches GPT-3.5 for RAG tasks
 
----
 
 ## ⚠️ Known Tradeoffs
 
@@ -181,3 +189,4 @@ http://localhost:8000
 - **LLM router adds latency** — ~0.5s extra per query for routing classification
 - **Token limits** — Free Groq tier has daily token limits; upgrade for production use
 - **PDF images ignored** — Embedded images inside PDFs are not extracted (text only)
+

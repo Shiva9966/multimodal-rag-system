@@ -502,6 +502,15 @@
   <div class="history-list" id="historyList">
     <div class="sb-empty">No chats yet</div>
   </div>
+
+  <!-- Reset button at bottom of sidebar -->
+  <div style="padding:10px 12px;border-top:1px solid var(--border);flex-shrink:0">
+    <button onclick="resetAll()" style="width:100%;padding:7px;background:transparent;border:1px solid #f85149;border-radius:7px;color:#f85149;font-family:var(--font);font-size:11.5px;cursor:pointer;transition:all 0.2s"
+      onmouseover="this.style.background='#f85149';this.style.color='white'"
+      onmouseout="this.style.background='transparent';this.style.color='#f85149'">
+      🗑️ Reset All Data
+    </button>
+  </div>
 </div>
 
 <!-- ══ MAIN ══ -->
@@ -541,6 +550,24 @@
   let sessions = [];
   let current = { title: 'New Chat', messages: [] };
   let activeFile = null;
+
+  async function resetAll() {
+    if (!confirm("This will delete ALL indexed files and FAISS index. Are you sure?")) return;
+    try {
+      const res = await fetch('/reset', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        indexedFiles = [];
+        sessions = [];
+        renderFiles();
+        renderHistory();
+        clearUI();
+        current = { title: 'New Chat', messages: [] };
+        document.getElementById('chatTitle').textContent = 'New Chat';
+        toast('✓ All data reset successfully', 'ok');
+      }
+    } catch(e) { toast('Reset failed: ' + e.message, 'err'); }
+  }
 
   // Load persisted files from server on startup
   async function loadPersistedFiles() {

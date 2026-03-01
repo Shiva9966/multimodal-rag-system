@@ -23,6 +23,12 @@ FILES_REGISTRY = "indexed_files.json"
 
 # ── Persist file list to disk ──
 def load_file_registry() -> list[dict]:
+    # If FAISS index doesn't exist, registry is invalid — clear it
+    faiss_path = os.path.join("faiss_index", "index.faiss")
+    if not os.path.exists(faiss_path):
+        if os.path.exists(FILES_REGISTRY):
+            os.remove(FILES_REGISTRY)
+        return []
     if os.path.exists(FILES_REGISTRY):
         with open(FILES_REGISTRY, "r") as f:
             return json.load(f)
@@ -133,6 +139,21 @@ async def ask(request: AskRequest):
 @app.get("/files")
 async def get_files():
     return {"files": indexed_files}
+
+
+@app.post("/reset")
+async def reset():
+    """Delete FAISS index + file registry — full reset."""
+    import shutil
+    try:
+        if os.path.exists("faiss_index"):
+            shutil.rmtree("faiss_index")
+        if os.path.exists(FILES_REGISTRY):
+            os.remove(FILES_REGISTRY)
+        indexed_files.clear()
+        return {"success": True, "message": "All data cleared successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/ask-test")

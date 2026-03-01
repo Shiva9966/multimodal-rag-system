@@ -33,20 +33,22 @@ def get_groq_api_key() -> str:
     return api_key
 
 
+# Singleton — load model once, reuse everywhere
+_embeddings_instance = None
+
 def get_embeddings() -> HuggingFaceEmbeddings:
     """
-    Initialize local HuggingFace embedding model.
-
-    all-MiniLM-L6-v2 is the industry-standard lightweight RAG embedding model:
-    - 384 dimensions, fast inference, great semantic quality
-    - Downloads once (~90MB), cached locally after first run
-    - Zero API calls, zero rate limits, works fully offline
+    Return cached embedding model instance (singleton).
+    Loading once prevents index corruption when merging multiple files.
     """
-    return HuggingFaceEmbeddings(
-        model_name=EMBEDDING_MODEL,
-        model_kwargs={"device": "cpu"},
-        encode_kwargs={"normalize_embeddings": True},
-    )
+    global _embeddings_instance
+    if _embeddings_instance is None:
+        _embeddings_instance = HuggingFaceEmbeddings(
+            model_name=EMBEDDING_MODEL,
+            model_kwargs={"device": "cpu"},
+            encode_kwargs={"normalize_embeddings": True},
+        )
+    return _embeddings_instance
 
 
 def get_text_splitter() -> RecursiveCharacterTextSplitter:

@@ -7,9 +7,12 @@ from src.utils import get_embeddings, get_groq_api_key, FAISS_INDEX_PATH
 from src.router import route_query, describe_route, Modality
 
 GROQ_MODEL = "llama-3.1-8b-instant"
-TOP_K = 6
-TOP_K_CSV = 20  # more rows for precise record lookups
+TOP_K = 8
+TOP_K_CSV = 20
+TOP_K_SUMMARY = 15  # For summarize queries fetch more chunks
 MIN_RESULTS = 1
+
+SUMMARY_KEYWORDS = {"summarize", "summary", "overview", "brief", "outline", "what is the report", "what does the report", "tell me about the report", "explain the report"}
 
 def load_index() -> FAISS:
     path = os.path.join(FAISS_INDEX_PATH, "index.faiss")
@@ -18,7 +21,14 @@ def load_index() -> FAISS:
     return FAISS.load_local(FAISS_INDEX_PATH, get_embeddings(), allow_dangerous_deserialization=True)
 
 def retrieve(index: FAISS, query: str, modality: Modality):
-    top_k = TOP_K_CSV if modality == Modality.CSV else TOP_K
+    # Use higher k for summarization queries
+    is_summary = any(kw in query.lower() for kw in SUMMARY_KEYWORDS)
+    if modality == Modality.CSV:
+        top_k = TOP_K_CSV
+    elif is_summary:
+        top_k = TOP_K_SUMMARY
+    else:
+        top_k = TOP_K
     if modality != Modality.GENERAL:
         candidates = index.similarity_search(query, k=top_k * 4)
         filtered = [d for d in candidates if d.metadata.get("type") == modality.value]
@@ -45,13 +55,13 @@ def build_prompt(query: str, docs: list) -> str:
     return f"""You are a document assistant. Answer using ONLY the context below.
 
 Rules:
-- Be specific and extract exact information from context.
+- For SUMMARIZE requests: give a comprehensive summary of ALL topics found in context. Never say the full document is not provided — just summarize everything you can see.
 - For WEBPAGE: answer questions about concepts, techniques, definitions from the article.
 - For CSV: use numbers and statistics.
 - For PDF/resume: extract exact details.
 - For IMAGE: describe what the OCR text says.
+- Be specific and extract exact information from context.
 - Never refuse to answer if relevant content exists in context.
-- Keep answer concise and accurate.
 
 === CONTEXT ===
 {context}
