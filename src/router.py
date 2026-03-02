@@ -1,18 +1,3 @@
-"""
-router.py — LLM-based semantic query routing.
-
-Instead of fragile keyword matching, we ask Groq LLaMA to classify
-the query intent. This handles synonyms, paraphrases, and any domain.
-
-Examples that now work:
-  "who perished?"         → CSV
-  "who made it alive?"    → CSV  
-  "casualties?"           → CSV
-  "what is attention?"    → WEBPAGE
-  "tell me about shiva"   → PDF
-  "what is drawn?"        → IMAGE
-"""
-
 import os
 from enum import Enum
 from groq import Groq

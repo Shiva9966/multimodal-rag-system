@@ -20,8 +20,33 @@ def load_index() -> FAISS:
         raise FileNotFoundError("No documents indexed yet. Please upload a file first.")
     return FAISS.load_local(FAISS_INDEX_PATH, get_embeddings(), allow_dangerous_deserialization=True)
 
+def expand_query(query: str) -> list[str]:
+    """
+    Use Groq to rewrite query into 3 variations.
+    This improves FAISS retrieval when user uses different words.
+    """
+    try:
+        client = Groq(api_key=get_groq_api_key())
+        response = client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "Rewrite the user query into 3 different variations using synonyms and alternative phrasings. Return ONLY the 3 queries, one per line, no numbering, no explanation."
+                },
+                {"role": "user", "content": query}
+            ],
+            temperature=0.7,
+            max_tokens=100,
+        )
+        variations = response.choices[0].message.content.strip().split("\n")
+        variations = [v.strip() for v in variations if v.strip()]
+        return [query] + variations[:3]  # original + 3 variations
+    except Exception:
+        return [query]  # fallback to original only
+
+
 def retrieve(index: FAISS, query: str, modality: Modality):
-    # Use higher k for summarization queries
     is_summary = any(kw in query.lower() for kw in SUMMARY_KEYWORDS)
     if modality == Modality.CSV:
         top_k = TOP_K_CSV
@@ -29,6 +54,36 @@ def retrieve(index: FAISS, query: str, modality: Modality):
         top_k = TOP_K_SUMMARY
     else:
         top_k = TOP_K
+
+    # Expand query into multiple variations for better retrieval
+    queries = expand_query(query)
+
+    # Search with all query variations, deduplicate by content
+    seen = set()
+    all_docs = []
+    for q in queries:
+        # Use similarity_search_with_score to filter low relevance chunks
+        results = index.similarity_search_with_score(q, k=top_k * 2)
+        for doc, score in results:
+            # FAISS L2 distance — lower = more relevant. Filter out irrelevant chunks
+            if score < 1.5:
+                key = doc.page_content[:100]
+                if key not in seen:
+                    seen.add(key)
+                    all_docs.append(doc)
+
+    if modality != Modality.GENERAL:
+        filtered = [d for d in all_docs if d.metadata.get("type") == modality.value]
+        if modality == Modality.CSV:
+            summary = [d for d in filtered if d.metadata.get("chunk_type") == "summary"]
+            rows    = [d for d in filtered if d.metadata.get("chunk_type") != "summary"]
+            filtered = (summary + rows)[:top_k]
+        else:
+            filtered = filtered[:top_k]
+        if len(filtered) >= MIN_RESULTS:
+            return filtered, True
+
+    return all_docs[:top_k], False
     if modality != Modality.GENERAL:
         candidates = index.similarity_search(query, k=top_k * 4)
         filtered = [d for d in candidates if d.metadata.get("type") == modality.value]

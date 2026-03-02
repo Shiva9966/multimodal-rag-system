@@ -1,12 +1,3 @@
-"""
-utils.py — Centralized configuration for embeddings, text splitting, and environment.
-
-Design Decision:
-- HuggingFace local embeddings (all-MiniLM-L6-v2) — zero rate limits, runs offline
-- Groq LLaMA 3.3 70B for generation — fast, 14,400 free req/day, 128k context
-- No embedding API calls = instant indexing regardless of file size
-"""
-
 import os
 import time
 import random

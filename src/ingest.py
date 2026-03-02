@@ -1,7 +1,3 @@
-"""
-ingest.py — Ingestion pipeline for PDF, CSV, Image, Webpage.
-"""
-
 import os
 import requests
 import pandas as pd
@@ -20,11 +16,7 @@ pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tessera
 
 SUPPORTED = {".pdf", ".csv", ".png", ".jpg", ".jpeg", ".bmp", ".webp", ".tiff"}
 
-
-# ---------------------------------------------------------------------------
 # Loaders
-# ---------------------------------------------------------------------------
-
 def load_pdf(file_path: str) -> list[Document]:
     loader = PyMuPDFLoader(file_path)
     docs = loader.load()
@@ -88,7 +80,6 @@ def load_csv(file_path: str) -> list[Document]:
         metadata={"type": "csv", "source": source, "chunk_type": "summary"}
     ))
 
-    # ── Individual row documents for precise lookups ──
     # Each row is its own document so FAISS can find exact matches
     for idx, row in df.iterrows():
         # Build a natural language row description
@@ -135,11 +126,7 @@ def load_webpage(url: str) -> list[Document]:
         metadata={"type": "webpage", "source": url}
     )]
 
-
-# ---------------------------------------------------------------------------
 # Dispatcher
-# ---------------------------------------------------------------------------
-
 def load_file(file_path: str) -> list[Document]:
     ext = Path(file_path).suffix.lower()
     if ext == ".pdf":
@@ -152,10 +139,7 @@ def load_file(file_path: str) -> list[Document]:
         raise ValueError(f"Unsupported type: {ext}. Supported: PDF, CSV, PNG, JPG, JPEG")
 
 
-# ---------------------------------------------------------------------------
 # FAISS helpers
-# ---------------------------------------------------------------------------
-
 def load_index(embeddings):
     path = os.path.join(FAISS_INDEX_PATH, "index.faiss")
     if os.path.exists(path):
@@ -168,10 +152,7 @@ def save_index(index):
     index.save_local(FAISS_INDEX_PATH)
 
 
-# ---------------------------------------------------------------------------
 # Ingestion entry points
-# ---------------------------------------------------------------------------
-
 def ingest_file(file_path: str) -> dict:
     raw_docs = load_file(file_path)
     return _store(raw_docs, os.path.basename(file_path))
