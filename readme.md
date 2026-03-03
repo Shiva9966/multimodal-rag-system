@@ -1,14 +1,7 @@
 # 🧠 Multi-Modal RAG System
-
 A production-ready **Retrieval Augmented Generation (RAG)** system that ingests and queries information from multiple data types — PDF, CSV, Images (OCR), and Webpages — using a unified vector store and LLM-powered responses.
 
-Built for the VAICS Consulting evaluation task.
-
----
-
 ## 🏗️ Architecture
-
-```
 ┌─────────────────────────────────────────────────────────────┐
 │                        USER INTERFACE                       │
 │                            FastAPI                          │
@@ -41,9 +34,6 @@ Built for the VAICS Consulting evaluation task.
             │  Groq LLaMA streaming       │
             └─────────────────────────────┘
 ```
-
----
-
 ## ✨ Features
 
 - **4 Data Types** — PDF, CSV, Image (OCR), Webpage
