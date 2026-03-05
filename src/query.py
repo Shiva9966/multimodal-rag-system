@@ -84,19 +84,6 @@ def retrieve(index: FAISS, query: str, modality: Modality):
             return filtered, True
 
     return all_docs[:top_k], False
-    if modality != Modality.GENERAL:
-        candidates = index.similarity_search(query, k=top_k * 4)
-        filtered = [d for d in candidates if d.metadata.get("type") == modality.value]
-        if modality == Modality.CSV:
-            summary = [d for d in filtered if d.metadata.get("chunk_type") == "summary"]
-            rows    = [d for d in filtered if d.metadata.get("chunk_type") != "summary"]
-            filtered = (summary + rows)[:top_k]
-        else:
-            filtered = filtered[:top_k]
-        if len(filtered) >= MIN_RESULTS:
-            return filtered, True
-    docs = index.similarity_search(query, k=top_k)
-    return docs, False
 
 def build_prompt(query: str, docs: list) -> str:
     parts = []
